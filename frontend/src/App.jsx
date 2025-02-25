@@ -6,12 +6,15 @@ import personService from './services/personService'
 import Notification from './components/Notification'
 
 
+
+
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [notification, setNotification] = useState(null)
+  const [messageType, setMessageType] = useState(null)
 
   useEffect(() => {
     personService
@@ -34,72 +37,66 @@ const App = () => {
   }
 
   const addPerson = (event) => {
-    event.preventDefault()
-
-    const existingPerson = persons.find(person => person.name === newName)
-    if (existingPerson) {
-      if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
-        const updatedPerson = { ...existingPerson, number: newNumber }
-        personService
-          .update(existingPerson.id, updatedPerson)
-          .then(returnedPerson => {
-            setPersons(persons.map(person => person.id !== existingPerson.id ? person : returnedPerson))
-            setNewName('')
-            setNewNumber('')
-            setNotification(`Updated ${newName}'s number`)
-            setTimeout(() => {
-              setNotification(null)
-            }, 3000)
-          })
-          .catch(error => {
-            setNotification(`Error updating ${newName}'s number`)
-            setTimeout(() => {
-              setNotification(null)
-            }, 3000)
-          })
-      }
-    } else {
-      const personObject = { name: newName, number: newNumber }
-      personService
-        .create(personObject)
-        .then(returnedPerson => {
-          setPersons(persons.concat(returnedPerson))
-          setNewName('')
-          setNewNumber('')
-          setNotification(`Added ${newName}`)
-          setTimeout(() => {
-            setNotification(null)
-          }, 3000)
-        })
-        .catch(error => {
-          setNotification(`Error adding ${newName}`)
-          setTimeout(() => {
-            setNotification(null)
-          }, 3000)
-        })
+    event.preventDefault();
+  
+    if (newName.length < 3) {
+      setNotification('Name must be at least 3 characters long');
+      setMessageType('error');
+      setTimeout(() => setNotification(null), 5000);
+      return;
     }
-  }
+  
+    const phonePattern = /^\d{2,3}-\d+$/;
+    if (!phonePattern.test(newNumber) || newNumber.replace(/-/g, '').length < 8) {
+      setNotification('Phone number must be in the format 09-1234567 or 040-9656535 and at least 8 digits long');
+      setMessageType('error');
+      setTimeout(() => setNotification(null), 5000);
+      return;
+    }
+  
+    const personObject = { name: newName, number: newNumber };
+  
+    personService
+      .create(personObject)
+      .then(returnedPerson => {
+        setPersons(persons.concat(returnedPerson));
+        setNewName('');
+        setNewNumber('');
+        setNotification(`Added ${newName}`);
+        setMessageType('success')
+        setTimeout(() => setNotification(null), 3000);
+      })
+      .catch(error => {
+        const errorMessage = error.response?.data?.error || `Error adding ${newName}`;
+        setNotification(errorMessage);
+        setMessageType('error');
+        setTimeout(() => setNotification(null), 5000);
+      });
+  };
+  
+  
+  
 
-  const deletePerson = (id) => {
-    const person = persons.find(person => person.id === id)
+  const deletePerson = (id) => {  
+    const person = persons.find(person => person.id === id);  
     if (window.confirm(`Delete ${person.name}?`)) {
       personService
-        .remove(id)
+        .remove(id)  
         .then(() => {
-          setPersons(persons.filter(person => person.id !== id))
-          setNotification(`Deleted ${person.name}`)
-          setTimeout(() => {
-            setNotification(null)
-          }, 3000)
+          setPersons(persons.filter(person => person.id !== id)); 
+          setNotification(`Deleted ${person.name}`);
+          setMessageType('success')
+          setTimeout(() => setNotification(null), 3000);
         })
         .catch(error => {
-          setNotification(`Error deleting ${person.name}`)
-          setTimeout(() => {
-            setNotification(null)
-          }, 3000)
-        })
+          setNotification(`Error deleting ${person.name}`);
+          setMessageType('error')
+          setTimeout(() => setNotification(null), 3000);
+        });
     }
-  }
+};
+
+
 
   const filteredPersons = persons.filter(person =>
     person.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -108,7 +105,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
-      <Notification message={notification} />
+      <Notification message={notification} type={messageType}/>
       <Filter value={searchQuery} onChange={handleSearchChange} />
       <h2>Add New</h2>
       <PersonForm
