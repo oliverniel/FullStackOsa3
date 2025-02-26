@@ -88,7 +88,7 @@ const App = () => {
           setMessageType('success')
           setTimeout(() => setNotification(null), 3000);
         })
-        .catch(error => {
+        .catch(() => {
           setNotification(`Error deleting ${person.name}`);
           setMessageType('error')
           setTimeout(() => setNotification(null), 3000);

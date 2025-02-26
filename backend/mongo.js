@@ -21,25 +21,25 @@ const personSchema = new mongoose.Schema({
 const Person = mongoose.model('Person', personSchema)
 
 if (process.argv.length === 3) {
-    console.log('phonebook:')
-    Person.find({}).then(result => {
-        result.forEach(person => {
-            console.log(person.name, person.number)
-        })
-        mongoose.connection.close()
-    })  
-} else if (process.argv.length === 5) { 
-    const person = new Person({
-        name: process.argv[3],
-        number: process.argv[4]
+  console.log('phonebook:')
+  Person.find({}).then(result => {
+    result.forEach(person => {
+      console.log(person.name, person.number)
     })
-    person.save().then(() => {
-        console.log(`Added ${person.name} number ${person.number} to phonebook`) 
-        mongoose.connection.close()
-    })
-  } else {
-    console.log("Usage: ")
-    console.log("   node mongo.js <password> # Listaa kaikki numerot")
-    console.log("   node mongo.js <password> <name> <number> # Lisää numero")
-    process.exit(1)
-  }
+    mongoose.connection.close()
+  })
+} else if (process.argv.length === 5) {
+  const person = new Person({
+    name: process.argv[3],
+    number: process.argv[4]
+  })
+  person.save().then(() => {
+    console.log(`Added ${person.name} number ${person.number} to phonebook`)
+    mongoose.connection.close()
+  })
+} else {
+  console.log('Usage: ')
+  console.log('   node mongo.js <password> # Listaa kaikki numerot')
+  console.log('   node mongo.js <password> <name> <number> # Lisää numero')
+  process.exit(1)
+}
